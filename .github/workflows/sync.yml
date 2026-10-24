@@ -8,6 +8,8 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    environment: .env
+      
     steps:
       - uses: actions/checkout@v4
 
