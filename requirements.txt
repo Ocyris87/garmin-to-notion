@@ -1,4 +1,5 @@
-garminconnect>=0.2.19,<0.3
+garminconnect>=0.3.19
+curl_cffi
 notion-client==2.2.1
 python-dotenv>=1.0,<2.0
 tzdata>=2024.1; sys_platform == "win32"

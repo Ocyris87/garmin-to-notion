@@ -1,4 +1,4 @@
-"""Generate Garmin OAuth tokens locally and output base64 string for GitHub secret.
+"""Generate Garmin OAuth tokens locally and output JSON string for GitHub secret.
 
 Usage:
     python scripts/generate_tokens.py
@@ -6,14 +6,14 @@ Usage:
 Reads GARMIN_EMAIL and GARMIN_PASSWORD from the environment or .env file,
 prompting for any missing credentials.
 Prompts for an MFA verification code when Garmin requires one.
-Outputs a base64 token string to set as the GARMIN_TOKENS GitHub secret.
+Outputs the tokens JSON string to set as the GARMIN_TOKENS_JSON GitHub secret.
 """
 
-import base64
 import json
 import os
 import sys
 from getpass import getpass
+from pathlib import Path
 
 from dotenv import load_dotenv
 
@@ -28,25 +28,23 @@ if not email or not password:
 
 from garminconnect import Garmin
 
+tokenstore = Path("~/.garminconnect").expanduser()
+tokenstore.mkdir(parents=True, exist_ok=True)
+
 garmin = Garmin(
     email, password, prompt_mfa=lambda: input("Garmin MFA code: ").strip()
 )
-if not hasattr(garmin, "garth"):
-    print("Error: This script requires garminconnect>=0.2.19,<0.3 for compatible tokens.")
-    sys.exit(1)
 
 print(f"Logging in as {email}...")
-garmin.login()
+garmin.login(str(tokenstore))
 print("Login successful!")
 
-oauth1, oauth2 = json.loads(base64.b64decode(garmin.garth.dumps()))
-token_str = base64.b64encode(
-    json.dumps({"oauth1": oauth1, "oauth2": oauth2}).encode()
-).decode()
-print(f"\nToken length: {len(token_str)} chars")
-print("\nSet this as your GARMIN_TOKENS GitHub secret:")
-print("=" * 60)
-print(token_str)
-print("=" * 60)
-print(f"\nRun: gh secret set GARMIN_TOKENS --repo fly-labs/garmin-to-notion")
-print("Then paste the token string above when prompted.")
+token_file = tokenstore / "garmin_tokens.json"
+if token_file.exists():
+    token_str = token_file.read_text().strip()
+    print(f"\nTokens saved locally to {token_file}")
+    print("\nIf GitHub Actions encounters 429 rate limiting on first run,")
+    print("copy the following content into GitHub Secret 'GARMIN_TOKENS_JSON':")
+    print("=" * 60)
+    print(token_str)
+    print("=" * 60)

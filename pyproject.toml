@@ -1,12 +1,13 @@
 [project]
 name = "garmin-to-notion"
-version = "3.0.0"
+version = "3.1.0"
 description = "Sync your Garmin fitness data to Notion databases"
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
-    "garminconnect>=0.2.19,<0.3",
+    "garminconnect>=0.3.19",
+    "curl_cffi",
     "notion-client==2.2.1",
     "python-dotenv>=1.0,<2.0",
 ]
