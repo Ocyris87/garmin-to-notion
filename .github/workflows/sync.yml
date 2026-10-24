@@ -16,21 +16,14 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.12"
+          cache: "pip"
 
-      - name: Cache pip packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Restore Garmin tokens
+      - name: Cache Garmin OAuth Tokens
         uses: actions/cache@v4
         id: garmin-tokens
         with:
-          path: ~/.garmin_tokens
+          path: ~/.garminconnect
           key: garmin-tokens-${{ github.run_id }}
           restore-keys: |
             garmin-tokens-
@@ -40,13 +33,24 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Seed Garmin tokens from secret if not cached
+        if: env.GARMIN_TOKENS_JSON != ''
+        env:
+          GARMIN_TOKENS_JSON: ${{ secrets.GARMIN_TOKENS_JSON }}
+        run: |
+          mkdir -p ~/.garminconnect
+          if [ ! -f ~/.garminconnect/garmin_tokens.json ]; then
+            echo "$GARMIN_TOKENS_JSON" > ~/.garminconnect/garmin_tokens.json
+            chmod 600 ~/.garminconnect/garmin_tokens.json
+          fi
+
       - name: Run sync
         env:
           GARMIN_EMAIL: ${{ secrets.GARMIN_EMAIL }}
           GARMIN_PASSWORD: ${{ secrets.GARMIN_PASSWORD }}
-          GARMIN_TOKENS: ${{ secrets.GARMIN_TOKENS }}
+          GARMIN_TOKENS_JSON: ${{ secrets.GARMIN_TOKENS_JSON }}
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-          GARMIN_TOKENSTORE: ~/.garmin_tokens
+          GARMIN_TOKENSTORE: ~/.garminconnect
           TIMEZONE: ${{ vars.TIMEZONE || 'UTC' }}
           GARMIN_DAYS_BACK: ${{ vars.GARMIN_DAYS_BACK || '30' }}
           GARMIN_ACTIVITIES_FETCH_LIMIT: ${{ vars.GARMIN_ACTIVITIES_FETCH_LIMIT || '1000' }}
