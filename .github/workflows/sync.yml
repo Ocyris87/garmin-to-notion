@@ -2,8 +2,8 @@ name: Garmin to Notion Sync
 
 on:
   schedule:
-    # 07:30 local Norwegian time (06:30 UTC)
-    - cron: '30 6 * * *'
+    # 07:30 local Norwegian time (06:15 UTC)
+    - cron: '15 6 * * *'
     # 20:00 local Norwegian time (19:00 UTC)
     - cron: '0 19 * * *'
   workflow_dispatch:
